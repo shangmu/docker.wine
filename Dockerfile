@@ -7,22 +7,41 @@
 # docker build -t wine .
 
 #FROM ubuntu
-FROM ubuntu14.04
+FROM ubuntu:14.04
+
+# no error msg for initing dialog from package installs
+#ENV DEBIAN_FRONTEND noninteractive
 
 # wine needs i386 to to run i386 binaries
 RUN dpkg --add-architecture i386
-RUN apt-get update 
-RUN apt-get install -y wine1.6
+RUN apt-get update
 
+# Wine 1.6
+#RUN apt-get install -y wine1.6
+
+# Wine 1.7
+RUN apt-get install -y software-properties-common && add-apt-repository -y ppa:ubuntu-wine/ppa
+RUN add-apt-repository ppa:ubuntu-x-swat/x-updates
+	# not strictly necessary
+RUN apt-get update
+RUN apt-get install -y wine1.7
+
+RUN apt-get install -y xvfb
 
 # xeyes testing
 RUN apt-get install -y x11-apps
 
+#RUN apt-get purge -y software-properties-common
+#RUN apt-get autoclean -y
+
 #ADD . /build
 
+# Reset the modified ENV
+#ENV DEBIAN_FRONTEND=""
 
 # Replace 1000 with your user / group id
-RUN export uid=1000 gid=1000 && \
+RUN useradd -u 1000 -d /home/developer -m -s /bin/bash developer
+#RUN export uid=1000 gid=1000 && \
     mkdir -p /home/developer && \
     echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd && \
     echo "developer:x:${uid}:" >> /etc/group && \
@@ -35,7 +54,16 @@ ENV HOME /home/developer
 
 RUN echo "alias ll='ls -al'" >> $HOME/.bashrc
 
-#RUN winetricks mfc42
+
+#ENV WINEPREFIX /home/developer/.wine
+#ENV WINEARCH win32
+#ENV WINEDEBUG -all
+
+# "sleep 5" fixes various problems, including %ProgramFiles% not staying and failing to create window in "&& xvfb-run ..."
+RUN winecfg && wine cmd.exe /c echo '%ProgramFiles%' && sleep 5
+
+#RUN xvfb-run -a winetricks -q corefonts
+#RUN xvfb-run -a winetricks -q mfc42
 
 
 #avoid having to set up a proper .Xauthority file.
