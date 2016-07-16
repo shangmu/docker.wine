@@ -39,7 +39,17 @@ RUN apt-get install -y x11-apps
 # Reset the modified ENV
 #ENV DEBIAN_FRONTEND=""
 
-# Replace 1000 with your user / group id
+# Set up a user matching your UID on the host system.
+# ( Alternative Approach:
+#   If you don't mind making available the same set of accounts as the
+#   host system, we can skip this and run the container with
+#   "--volume /etc/passwd:/etc/passwd:ro --user $UID" instead
+#   [we may also mount /etc/group to be complete]. and handle $HOME somehow
+# )
+# (This makes life easier. Running with different UID would require
+#  --net=host and mounting .Xauthority file on ubuntu14.04.)
+
+# Replace 1000 with your user / group id on your host system
 RUN useradd -u 1000 -d /home/developer -m -s /bin/bash developer
 #RUN export uid=1000 gid=1000 && \
     mkdir -p /home/developer && \
@@ -50,7 +60,11 @@ RUN useradd -u 1000 -d /home/developer -m -s /bin/bash developer
     chown ${uid}:${gid} -R /home/developer
 
 USER developer
+
 ENV HOME /home/developer
+# If we didn't create a user from above:
+# RUN mkdir $HOME
+# RUN chmod 777 $HOME
 
 RUN echo "alias ll='ls -al'" >> $HOME/.bashrc
 
