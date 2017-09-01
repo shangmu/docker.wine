@@ -19,3 +19,7 @@ Of course Wine is included in the build.
 The .sh shell script is a helper for starting such a container without having to manually type in
 the necessary arguments to use the host's display.
 
+Examples:   
+`docker.wine.sh myDockerWineImage  wine notepad.exe`  
+`docker.wine.sh --name=todo -v ~/data:/data myDockerWineImage wine /data/todo/ToDoList.exe`
+
